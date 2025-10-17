@@ -11,7 +11,7 @@ maintainers = [
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">3.9.1,<4"
+python = ">3.10.0,<4"
 fastapi = "^0.115.6"
 uvicorn = { version = "^0.34.0", extras = ["standard"] }
 fastapi-users = "^14.0.0"
@@ -25,6 +25,7 @@ SQLAlchemy = {version = "^2.0.36", extras = ["asyncio"]}
 asyncpg = {version = "^0.30.0", extras = ["sa"]}
 httptools = "^0.6.4"
 pymongo = "^4.10.1"
+alembic = "^1.17.0"
 
 
 [tool.poetry.group.dev.dependencies]

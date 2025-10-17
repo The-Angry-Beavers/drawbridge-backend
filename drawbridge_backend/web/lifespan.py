@@ -53,7 +53,8 @@ async def lifespan_setup(
 
     app.middleware_stack = None
     _setup_db(app)
-    await _create_tables()
+    # Delegate migrations to Alembic.
+    # await _create_tables()
     app.middleware_stack = app.build_middleware_stack()
 
     yield

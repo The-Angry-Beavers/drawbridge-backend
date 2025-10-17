@@ -45,7 +45,7 @@ class Settings(BaseSettings):
     db_port: int = 5432
     db_user: str = "drawbridge_backend"
     db_pass: str = "drawbridge_backend"
-    db_base: str = "admin"
+    db_base: str = "drawbridge_backend"
     db_echo: bool = False
 
     @property
