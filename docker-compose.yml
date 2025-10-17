@@ -1,0 +1,41 @@
+services:
+  api: &main_app
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    image: drawbridge_backend:${DRAWBRIDGE_BACKEND_VERSION:-latest}
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DRAWBRIDGE_BACKEND_HOST: 0.0.0.0
+      DRAWBRIDGE_BACKEND_DB_HOST: drawbridge_backend-db
+      DRAWBRIDGE_BACKEND_DB_PORT: 5432
+      DRAWBRIDGE_BACKEND_DB_USER: drawbridge_backend
+      DRAWBRIDGE_BACKEND_DB_PASS: drawbridge_backend
+      DRAWBRIDGE_BACKEND_DB_BASE: drawbridge_backend
+
+  db:
+    image: postgres:16.3-bullseye
+    hostname: drawbridge_backend-db
+    environment:
+      POSTGRES_PASSWORD: "drawbridge_backend"
+      POSTGRES_USER: "drawbridge_backend"
+      POSTGRES_DB: "drawbridge_backend"
+    volumes:
+      - drawbridge_backend-db-data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: pg_isready -U drawbridge_backend
+      interval: 2s
+      timeout: 3s
+      retries: 40
+
+
+
+volumes:
+  drawbridge_backend-db-data:
+    name: drawbridge_backend-db-data
