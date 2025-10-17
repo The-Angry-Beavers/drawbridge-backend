@@ -1,9 +1,8 @@
-from sqlalchemy import String, ForeignKey, Enum, Float
-from sqlalchemy.orm import Mapped, relationship
-from sqlalchemy.testing.schema import mapped_column
+from sqlalchemy import String, ForeignKey, Enum
+from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from drawbridge_backend.db.base import Base
-from drawbridge_backend.services.enums import DataTypeEnum, OperatorEnum
+from drawbridge_backend.services.enums import DataTypeEnum
 
 
 class TableModel(Base):
