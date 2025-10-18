@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 from drawbridge_backend.domain.enums import DataTypeEnum
 from drawbridge_backend.domain.impl.tables import SqlAlchemyTablesService
 from drawbridge_backend.domain.tables.entities import (
-    Field,
     UnSavedTable,
     InsertRow,
     RowData,
@@ -30,15 +29,13 @@ async def test_create_table_and_fetch(
     table_def = UnSavedTable(
         name="test_table",
         fields=[
-            Field(
-                _field_id=1,
+            UnSavedField(
                 name="name",
                 verbose_name="Name",
                 data_type=DataTypeEnum.STRING,
                 is_nullable=False,
             ),
-            Field(
-                _field_id=2,
+            UnSavedField(
                 name="age",
                 verbose_name="Age",
                 data_type=DataTypeEnum.INT,
@@ -111,6 +108,9 @@ async def test_insert_and_fetch_rows(
     # Проверяем count_rows
     count = await service.count_rows(table)
     assert count == 2
+
+    fetched_rows = await service.fetch_rows(table)
+    assert len(fetched_rows) == 2
 
 
 @pytest.mark.anyio
