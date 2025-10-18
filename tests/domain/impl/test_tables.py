@@ -1,15 +1,15 @@
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from drawbridge_backend.domain.enums import DataTypeEnum
 from drawbridge_backend.domain.impl.tables import SqlAlchemyTablesService
 from drawbridge_backend.domain.tables.entities import (
-    UnSavedTable,
     InsertRow,
-    RowData,
     IntValue,
+    RowData,
     StringValue,
     UnSavedField,
+    UnSavedTable,
 )
 
 
@@ -168,8 +168,8 @@ async def test_update_and_delete_rows(
                 table=table,
                 row_id=row_id,
                 new_values=[RowData(quantity_field_id, value=IntValue(20))],
-            )
-        ]
+            ),
+        ],
     )
     assert updated[0].values[1].value.value == 20
 

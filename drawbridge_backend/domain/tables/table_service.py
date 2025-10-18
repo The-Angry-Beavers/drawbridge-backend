@@ -1,13 +1,13 @@
 import abc
 
 from drawbridge_backend.domain.tables.entities import (
-    OrderingParam,
     FilteringParam,
     InsertRow,
+    OrderingParam,
     Row,
-    UpdateRow,
     Table,
     UnSavedTable,
+    UpdateRow,
 )
 
 
@@ -37,7 +37,6 @@ class AbstractTableService(abc.ABC):
         :param filtering_params: List of filtering parameters. Casts as OR conditions.
         :return: List of rows as dictionaries.
         """
-        pass
 
     async def fetch_row_by_id(
         self,
@@ -55,7 +54,7 @@ class AbstractTableService(abc.ABC):
             limit=1,
             offset=0,
             filtering_params=[
-                FilteringParam(field_id=0, value=str(row_id))
+                FilteringParam(field_id=0, value=str(row_id)),
             ],  # Assuming field_id=0 is the row ID field
         )
         if rows:
@@ -71,7 +70,6 @@ class AbstractTableService(abc.ABC):
 
         :param rows: List of rows to insert.
         """
-        pass
 
     async def insert_row(
         self,
@@ -93,7 +91,6 @@ class AbstractTableService(abc.ABC):
 
         :param rows: List of rows to update.
         """
-        pass
 
     async def update_row(
         self,
@@ -117,7 +114,6 @@ class AbstractTableService(abc.ABC):
         :param table: table to delete rows from.
         :param row_ids: List of row IDs to delete.
         """
-        pass
 
     async def delete_row(
         self,
@@ -134,17 +130,14 @@ class AbstractTableService(abc.ABC):
     @abc.abstractmethod
     async def update_table(self, table: Table) -> Table:
         """Update table metadata and schema in storage db"""
-        pass
 
     @abc.abstractmethod
     async def create_table(self, table: UnSavedTable) -> Table:
         """Create table metadata and schema in storage db"""
-        pass
 
     @abc.abstractmethod
     async def get_table_by_id(self, table_id: int) -> Table | None:
         """Get table metadata by ID"""
-        pass
 
     @abc.abstractmethod
     async def get_tables_by_ids(self, table_ids: list[int]) -> list[Table]:

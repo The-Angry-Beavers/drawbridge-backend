@@ -1,18 +1,17 @@
 import sys
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from alembic import context
+from sqlalchemy import engine_from_config, pool
 
+from drawbridge_backend.db.meta import meta
 from drawbridge_backend.db.models import load_all_models
 from drawbridge_backend.settings import settings
-from drawbridge_backend.db.meta import meta
-
-from alembic import context
-
 
 if "revision" in sys.argv and "-m" not in sys.argv:
-    raise RuntimeError("It's required to set -m 'migration message' when creating new revision.")
+    raise RuntimeError(
+        "It's required to set -m 'migration message' when creating new revision.",
+    )
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -78,7 +77,8 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection,
+            target_metadata=target_metadata,
         )
 
         with context.begin_transaction():

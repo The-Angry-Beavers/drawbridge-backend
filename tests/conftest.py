@@ -13,8 +13,8 @@ from sqlalchemy.ext.asyncio import (
 from drawbridge_backend.db.dependencies import get_db_session
 from drawbridge_backend.db.utils import (
     create_database,
-    drop_database,
     create_storage_database,
+    drop_database,
     drop_storage_database,
 )
 from drawbridge_backend.settings import settings

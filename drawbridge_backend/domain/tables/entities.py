@@ -1,6 +1,6 @@
 import dataclasses
 import datetime
-from typing import TypeVar, Generic, Any
+from typing import Any, Generic, TypeVar
 
 from drawbridge_backend.domain.enums import DataTypeEnum
 

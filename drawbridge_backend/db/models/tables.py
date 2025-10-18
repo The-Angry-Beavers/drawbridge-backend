@@ -1,5 +1,5 @@
-from sqlalchemy import String, ForeignKey, Enum
-from sqlalchemy.orm import Mapped, relationship, mapped_column
+from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drawbridge_backend.db.base import Base
 from drawbridge_backend.domain.enums import DataTypeEnum
@@ -29,11 +29,11 @@ class TableModel(Base):
     verbose_name: Mapped[str] = mapped_column(String(256), nullable=False)
     description: Mapped[str | None]
     namespace_id: Mapped[int] = mapped_column(
-        ForeignKey("namespaces.id"), nullable=True
+        ForeignKey("namespaces.id"), nullable=True,
     )
 
     fields: Mapped[list["FieldModel"]] = relationship(
-        back_populates="table", cascade="all, delete-orphan"
+        back_populates="table", cascade="all, delete-orphan",
     )
     namespace: Mapped["NameSpaceModel"] = relationship(back_populates="tables")
 
@@ -48,7 +48,7 @@ class FieldModel(Base):
     name: Mapped[str] = mapped_column(String(256), nullable=False)
     verbose_name: Mapped[str] = mapped_column(String(256), nullable=False)
     data_type: Mapped[DataTypeEnum] = mapped_column(
-        Enum(DataTypeEnum, native_enum=False), nullable=False
+        Enum(DataTypeEnum, native_enum=False), nullable=False,
     )
 
     is_nullable: Mapped[bool] = mapped_column(nullable=False, default=True)

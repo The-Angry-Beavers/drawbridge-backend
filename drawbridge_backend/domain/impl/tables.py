@@ -1,39 +1,41 @@
-from typing import Final, Type, Any, cast
+from typing import Any, Final, Type, cast
 
 from sqlalchemy import (
-    MetaData,
-    Table as SATable,
     Column,
     Integer,
-    select,
+    MetaData,
     Select,
-    update,
     delete,
     func,
+    select,
+    update,
 )
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
+from sqlalchemy import (
+    Table as SATable,
+)
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import sqltypes as sqlalchemy_types
 from typing_extensions import TypeVar
 
-from drawbridge_backend.db.models.tables import TableModel, FieldModel
+from drawbridge_backend.db.models.tables import FieldModel, TableModel
 from drawbridge_backend.domain.enums import DataTypeEnum
 from drawbridge_backend.domain.tables.entities import (
-    UpdateRow,
-    Row,
-    InsertRow,
-    OrderingParam,
-    FilteringParam,
-    Table,
-    UnSavedTable,
-    RowData,
     BaseValue,
-    IntValue,
-    StringValue,
     BoolValue,
-    FloatValue,
     DateTimeValue,
     Field,
+    FilteringParam,
+    FloatValue,
+    InsertRow,
+    IntValue,
+    OrderingParam,
+    Row,
+    RowData,
+    StringValue,
+    Table,
+    UnSavedTable,
+    UpdateRow,
 )
 from drawbridge_backend.domain.tables.table_service import AbstractTableService
 
@@ -58,7 +60,7 @@ def get_sa_table(table: Table, metadata: MetaData) -> SATable:
                 col_type,
                 nullable=field.is_nullable,
                 default=field.default_value,
-            )
+            ),
         )
 
     return SATable(
@@ -98,14 +100,14 @@ T = TypeVar("T", bound=Any)
 
 
 def _add_ordering_params_to_stmt(
-    stmt: Select[T], ordering_params: list[OrderingParam]
+    stmt: Select[T], ordering_params: list[OrderingParam],
 ) -> Select[T]:
     # TODO: Implement
     return stmt
 
 
 def _add_filtering_params_to_stmt(
-    stmt: Select[T], filtering_params: list[FilteringParam]
+    stmt: Select[T], filtering_params: list[FilteringParam],
 ) -> Select[T]:
     # TODO: Implement
     return stmt
@@ -246,7 +248,7 @@ class SqlAlchemyTablesService(AbstractTableService):
                 field = table.get_field_by_id(rd.field_id)
                 if not field:
                     raise ValueError(
-                        f"Field with id={rd.field_id} not found in table '{table.name}'"
+                        f"Field with id={rd.field_id} not found in table '{table.name}'",
                     )
                 row_data[field.name] = rd.value.value
             insert_values.append(row_data)
@@ -272,7 +274,7 @@ class SqlAlchemyTablesService(AbstractTableService):
                 field = table.get_field_by_id(rd.field_id)
                 if not field:
                     raise ValueError(
-                        f"Field with id={rd.field_id} not found in table '{table.name}'"
+                        f"Field with id={rd.field_id} not found in table '{table.name}'",
                     )
                 update_data[field.name] = rd.value.value
 
@@ -287,7 +289,7 @@ class SqlAlchemyTablesService(AbstractTableService):
                 map_to_rows(
                     table,
                     cast(list[dict[str, Any]], result.mappings().all()),
-                )
+                ),
             )
 
         await self._storage_db_session.commit()

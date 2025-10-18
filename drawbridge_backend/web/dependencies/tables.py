@@ -1,12 +1,12 @@
 from typing import Annotated
 
 from fastapi.params import Depends
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
 from drawbridge_backend.db.dependencies import (
+    get_db_session,
     get_storage_db_engine,
     get_storage_db_session,
-    get_db_session,
 )
 from drawbridge_backend.domain.impl.tables import SqlAlchemyTablesService
 

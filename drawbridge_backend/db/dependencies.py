@@ -1,6 +1,6 @@
 from typing import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from starlette.requests import Request
 
 

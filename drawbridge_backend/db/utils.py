@@ -52,8 +52,8 @@ async def create_storage_database() -> None:
     async with engine.connect() as conn:
         database_existance = await conn.execute(
             text(
-                f"SELECT 1 FROM pg_database WHERE datname='{settings.storage_db_base}'"
-            )
+                f"SELECT 1 FROM pg_database WHERE datname='{settings.storage_db_base}'",
+            ),
         )
         database_exists = database_existance.scalar() == 1
 
@@ -63,8 +63,8 @@ async def create_storage_database() -> None:
     async with engine.connect() as conn:
         await conn.execute(
             text(
-                f'CREATE DATABASE "{settings.storage_db_base}" ENCODING "utf8" TEMPLATE template1'
-            )
+                f'CREATE DATABASE "{settings.storage_db_base}" ENCODING "utf8" TEMPLATE template1',
+            ),
         )
 
 
@@ -81,7 +81,7 @@ async def drop_storage_database() -> None:
                 SELECT pg_terminate_backend(pid)
                 FROM pg_stat_activity
                 WHERE datname = '{settings.storage_db_base}' AND pid <> pg_backend_pid()
-                """
-            )
+                """,
+            ),
         )
         await conn.execute(text(f'DROP DATABASE "{settings.storage_db_base}"'))
