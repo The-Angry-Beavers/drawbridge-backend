@@ -96,16 +96,19 @@ async def create_namespace(
         description=request.description,
     )
     session.add(model_instance)
-    session.flush()
+    await session.flush()
 
-    NameSpacePermissionModel(
+    permission = NameSpacePermissionModel(
         namespace_id=model_instance.id,
         user_id=user.id,
         can_edit=True,
     )
-
+    session.add(permission)
+    await session.flush()
     await session.commit()
-    return NameSpaceSchema.model_validate(model_instance, from_attributes=True)
+
+    namespace = await _get_namespace_by_id(model_instance.id, session)
+    return NameSpaceSchema.model_validate(namespace, from_attributes=True)
 
 
 @router.patch("/namespaces/{namespace_id}", tags=["namespaces"])
