@@ -16,7 +16,6 @@ class CreateNameSpaceSchema(BaseModel):
     description: str | None = None
 
 class UpdateNameSpaceSchema(BaseModel):
-
     name: str | None = None
     description: str | None = None
 

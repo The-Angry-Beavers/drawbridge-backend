@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from sqlalchemy import select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -93,7 +93,9 @@ async def create_namespace(
 
 @router.patch("/namespaces/{namespace_id}", tags=["namespaces"])
 async def partial_update_namespace(
-    namespace_id: int, request: UpdateNameSpaceSchema, session: SessionDep
+    namespace_id: int,
+    session: SessionDep,
+    request: UpdateNameSpaceSchema = Body(...),
 ) -> NameSpaceSchema:
     """Update namespace"""
     namespace_instance = _get_namespace_by_id(namespace_id, session)
