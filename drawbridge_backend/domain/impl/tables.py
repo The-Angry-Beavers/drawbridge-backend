@@ -8,7 +8,8 @@ from sqlalchemy import (
     select,
     Select,
     update,
-    delete, func,
+    delete,
+    func,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 from sqlalchemy.orm import selectinload
@@ -137,7 +138,7 @@ class SqlAlchemyTablesService(AbstractTableService):
             )
             self._db_session.add(field_model)
 
-        await self._db_session.commit()
+        await self._db_session.flush()
 
         sa_table = get_sa_table(
             Table(
