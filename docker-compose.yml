@@ -27,6 +27,7 @@ services:
       POSTGRES_DB: "drawbridge_backend"
     volumes:
       - drawbridge_backend-db-data:/var/lib/postgresql/data
+      - ./deploy/db-scripts:/docker-entrypoint-initdb.d
     restart: always
     healthcheck:
       test: pg_isready -U drawbridge_backend

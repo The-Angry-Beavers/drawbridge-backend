@@ -54,7 +54,7 @@ class Settings(BaseSettings):
     storage_db_port: int = 5432
     storage_db_user: str = "drawbridge_backend"
     storage_db_pass: str = "drawbridge_backend"
-    storage_db_base: str = "drawbridge_backend"
+    storage_db_base: str = "drawbridge_backend_storage"
     storage_db_echo: bool = False
     @property
     def db_url(self) -> URL:
