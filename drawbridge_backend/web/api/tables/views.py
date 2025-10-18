@@ -6,7 +6,6 @@ from drawbridge_backend.web.api.tables.schemas import (
     FetchRowsResponseSchema,
     InsertRowsRequestSchema,
     InsertRowsResponseSchema,
-    NameSpaceSchema,
     TableSchema,
     UpdateRowsRequestSchema,
     UpdateTableSchema,
@@ -101,7 +100,7 @@ async def insert_table_rows(
 
     return InsertRowsResponseSchema(success=is_success, errors=errors)
 
-
+@router.post("/tables/deleteRows", tags=["rows"])
 async def delete_table_rows(
     req: DeleteRowsRequestSchema,
     table_service: TableServiceDep,
@@ -144,11 +143,11 @@ async def update_table_row(
     return InsertRowsResponseSchema(success=is_success, errors=errors)
 
 
-@router.get("/namespaces", tags=["namespaces"])
-async def retrieve_namespaces() -> list[NameSpaceSchema]:
-    """Retrieve all available for user namespaces."""
-    raise NotImplementedError
-
+# @router.get("/namespaces", tags=["namespaces"])
+# async def retrieve_namespaces() -> list[NameSpaceSchema]:
+#     """Retrieve all available for user namespaces."""
+#     raise NotImplementedError
+#
 
 # @router.delete("/tables/deleteField", tags=["fields"])
 # async def delete_table_field(req: DeleteFieldSchema) -> TableSchema:
