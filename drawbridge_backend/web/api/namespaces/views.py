@@ -36,7 +36,6 @@ def _filter_namespaces_for_user(
         NameSpacePermissionModel.user_id == auth_user.id,
         or_(
             NameSpacePermissionModel.can_edit.is_(True),
-            NameSpacePermissionModel.can_view.is_(True),
         ),
     )
 
