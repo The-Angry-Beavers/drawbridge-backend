@@ -1,8 +1,6 @@
 import datetime
-from typing import Generic
 
 from pydantic import BaseModel, Field
-from typing_extensions import TypeVar
 
 from drawbridge_backend.domain.enums import DataTypeEnum
 from drawbridge_backend.domain.tables.entities import (
@@ -111,7 +109,7 @@ class FetchRowsResponseSchema(BaseModel):
 
 
 class InsertRowSchema(BaseModel):
-    values: list[RowData] # type: ignore
+    values: list[RowData]  # type: ignore
 
 
 class InsertRowsRequestSchema(BaseModel):
@@ -121,7 +119,7 @@ class InsertRowsRequestSchema(BaseModel):
 
 class UpdateRowSchema(BaseModel):
     row_id: int
-    new_values: list[RowData] # type: ignore
+    new_values: list[RowData]  # type: ignore
 
 
 class UpdateRowsRequestSchema(BaseModel):
