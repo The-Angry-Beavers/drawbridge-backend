@@ -61,7 +61,12 @@ def get_sa_table(table: Table, metadata: MetaData) -> SATable:
             )
         )
 
-    return SATable(table.name, metadata, *columns)
+    return SATable(
+        table.name,
+        metadata,
+        *columns,
+        extend_existing=True,
+    )
 
 
 def map_to_rows(table: Table, dict_rows: list[dict[str, Any]]) -> list[Row]:
@@ -118,6 +123,27 @@ class SqlAlchemyTablesService(AbstractTableService):
         self._metadata = MetaData()
         self._storage_engine = storage_engine
 
+    async def fetch_rows(
+        self,
+        table: Table,
+        limit: int = 100,
+        offset: int = 0,
+        ordering_params: list[OrderingParam] | None = None,
+        filtering_params: list[FilteringParam] | None = None,
+    ) -> list[Row]:
+        sa_table = get_sa_table(table, self._metadata)
+        stmt = select(sa_table).limit(limit).offset(offset)
+
+        if ordering_params:
+            stmt = _add_ordering_params_to_stmt(stmt, ordering_params)
+
+        if filtering_params:
+            stmt = _add_filtering_params_to_stmt(stmt, filtering_params)
+
+        result = await self._storage_db_session.execute(stmt)
+        rows = map_to_rows(table, cast(list[dict[str, Any]], result.mappings().all()))
+        return rows
+
     async def create_table(self, table: UnSavedTable) -> Table:
         table_model = TableModel(
             name=table.name,
@@ -139,6 +165,8 @@ class SqlAlchemyTablesService(AbstractTableService):
             self._db_session.add(field_model)
 
         await self._db_session.flush()
+
+        saved_table = await self.get_table_by_id(table_model.id)
 
         sa_table = get_sa_table(
             Table(
@@ -162,9 +190,9 @@ class SqlAlchemyTablesService(AbstractTableService):
         async with self._storage_engine.begin() as conn:
             await conn.run_sync(sa_table.create)
 
-        return await self.get_table_by_id(table_model.id)  # type: ignore[return-value]
+        return saved_table # type: ignore[return-value]
 
-    async def get_table_by_id(self, table_id: int) -> Table | None:
+    async def get_table_by_id(self, table_id: int) -> Table:
         """Возвращает доменную модель таблицы по её ID."""
         stmt = (
             select(TableModel)
@@ -174,7 +202,7 @@ class SqlAlchemyTablesService(AbstractTableService):
         result = await self._db_session.execute(stmt)
         table_model: TableModel | None = result.scalar_one_or_none()
         if not table_model:
-            return None
+            raise ValueError("There is no table with id=%s")
 
         fields = [
             Field(

@@ -11,7 +11,12 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from drawbridge_backend.db.dependencies import get_db_session
-from drawbridge_backend.db.utils import create_database, drop_database
+from drawbridge_backend.db.utils import (
+    create_database,
+    drop_database,
+    create_storage_database,
+    drop_storage_database,
+)
 from drawbridge_backend.settings import settings
 from drawbridge_backend.web.application import get_app
 
@@ -49,6 +54,45 @@ async def _engine() -> AsyncGenerator[AsyncEngine, None]:
     finally:
         await engine.dispose()
         await drop_database()
+
+
+@pytest.fixture(scope="session")
+async def storage_engine() -> AsyncGenerator[AsyncEngine, None]:
+    """
+    Create engine and databases.
+
+    :yield: new engine.
+    """
+
+    await create_storage_database()
+
+    engine = create_async_engine(str(settings.storage_db_url))
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
+        await drop_storage_database()
+
+
+@pytest.fixture
+async def storage_dbsession(
+    storage_engine: AsyncEngine,
+) -> AsyncGenerator[AsyncSession, None]:
+    connection = await storage_engine.connect()
+    trans = await connection.begin()
+
+    session_maker = async_sessionmaker(
+        connection,
+        expire_on_commit=False,
+    )
+    session = session_maker()
+
+    try:
+        yield session
+    finally:
+        await session.close()
+        await trans.rollback()
+        await connection.close()
 
 
 @pytest.fixture

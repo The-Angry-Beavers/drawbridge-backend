@@ -66,6 +66,7 @@ filterwarnings = [
 env = [
     "DRAWBRIDGE_BACKEND_ENVIRONMENT=pytest",
     "DRAWBRIDGE_BACKEND_DB_BASE=drawbridge_backend_test",
+    "DRAWBRIDGE_BACKEND_STORAGE_DB_BASE=drawbridge_backend_stprage_test",
 ]
 
 [tool.ruff]

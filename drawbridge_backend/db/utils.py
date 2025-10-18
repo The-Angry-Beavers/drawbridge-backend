@@ -42,3 +42,46 @@ async def drop_database() -> None:
         )
         await conn.execute(text(disc_users))
         await conn.execute(text(f'DROP DATABASE "{settings.db_base}"'))
+
+
+async def create_storage_database() -> None:
+    """Create storage database."""
+    db_url = make_url(str(settings.storage_db_url.with_path("/postgres")))
+    engine = create_async_engine(db_url, isolation_level="AUTOCOMMIT")
+
+    async with engine.connect() as conn:
+        database_existance = await conn.execute(
+            text(
+                f"SELECT 1 FROM pg_database WHERE datname='{settings.storage_db_base}'"
+            )
+        )
+        database_exists = database_existance.scalar() == 1
+
+    if database_exists:
+        await drop_storage_database()
+
+    async with engine.connect() as conn:
+        await conn.execute(
+            text(
+                f'CREATE DATABASE "{settings.storage_db_base}" ENCODING "utf8" TEMPLATE template1'
+            )
+        )
+
+
+async def drop_storage_database() -> None:
+    """Drop storage database."""
+    db_url = make_url(str(settings.storage_db_url.with_path("/postgres")))
+    engine = create_async_engine(db_url, isolation_level="AUTOCOMMIT")
+
+    async with engine.connect() as conn:
+        # Отключаем всех пользователей
+        await conn.execute(
+            text(
+                f"""
+                SELECT pg_terminate_backend(pid)
+                FROM pg_stat_activity
+                WHERE datname = '{settings.storage_db_base}' AND pid <> pg_backend_pid()
+                """
+            )
+        )
+        await conn.execute(text(f'DROP DATABASE "{settings.storage_db_base}"'))
