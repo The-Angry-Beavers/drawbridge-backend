@@ -1,12 +1,13 @@
 """initial-migration
 
 Revision ID: 8b2fc4ad120d
-Revises: 
+Revises:
 Create Date: 2025-10-18 00:24:16.414094
 
 """
 from typing import Sequence, Union
 
+import fastapi_users_db_sqlalchemy
 from alembic import op
 import sqlalchemy as sa
 

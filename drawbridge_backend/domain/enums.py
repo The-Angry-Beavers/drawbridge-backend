@@ -5,6 +5,7 @@ class DataTypeEnum(StrEnum):
     INT = auto()
     FLOAT = auto()
     STRING = auto()
+    BOOL = auto()
     DATETIME = auto()
 
 class OperatorEnum(StrEnum):

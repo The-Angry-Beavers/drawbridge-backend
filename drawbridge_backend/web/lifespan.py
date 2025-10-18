@@ -28,6 +28,18 @@ def _setup_db(app: FastAPI) -> None:  # pragma: no cover
     app.state.db_session_factory = session_factory
 
 
+
+    storage_engine = create_async_engine(str(settings.db_url), echo=settings.db_echo)
+    storage_session_factory = async_sessionmaker(
+        storage_engine,
+        expire_on_commit=False,
+    )
+    app.state.storage_db_engine = storage_engine
+    app.state.storage_db_session_factory = storage_session_factory
+
+
+
+
 async def _create_tables() -> None:  # pragma: no cover
     """Populates tables in the database."""
     load_all_models()

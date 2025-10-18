@@ -2,7 +2,7 @@ from sqlalchemy import String, ForeignKey, Enum
 from sqlalchemy.orm import Mapped, relationship, mapped_column
 
 from drawbridge_backend.db.base import Base
-from drawbridge_backend.services.enums import DataTypeEnum
+from drawbridge_backend.domain.enums import DataTypeEnum
 
 
 class TableModel(Base):
@@ -28,6 +28,7 @@ class FieldModel(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     table_id: Mapped[int] = mapped_column(ForeignKey("tables.id"), nullable=False)
     name: Mapped[str] = mapped_column(String(256), nullable=False)
+    verbose_name: Mapped[str] = mapped_column(String(256), nullable=False)
     data_type: Mapped[DataTypeEnum] = mapped_column(
         Enum(DataTypeEnum, native_enum=False), nullable=False
     )

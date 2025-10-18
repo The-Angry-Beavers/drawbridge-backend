@@ -40,6 +40,7 @@ class Settings(BaseSettings):
 
     log_level: LogLevel = LogLevel.INFO
     users_secret: str = os.getenv("USERS_SECRET", "")
+
     # Variables for the database
     db_host: str = "localhost"
     db_port: int = 5432
@@ -48,6 +49,13 @@ class Settings(BaseSettings):
     db_base: str = "drawbridge_backend"
     db_echo: bool = False
 
+    # Variables for the database
+    storage_db_host: str = "localhost"
+    storage_db_port: int = 5432
+    storage_db_user: str = "drawbridge_backend"
+    storage_db_pass: str = "drawbridge_backend"
+    storage_db_base: str = "drawbridge_backend"
+    storage_db_echo: bool = False
     @property
     def db_url(self) -> URL:
         """
@@ -62,6 +70,22 @@ class Settings(BaseSettings):
             user=self.db_user,
             password=self.db_pass,
             path=f"/{self.db_base}",
+        )
+
+    @property
+    def storage_db_url(self) -> URL:
+        """
+        Assemble database URL from settings.
+
+        :return: database URL.
+        """
+        return URL.build(
+            scheme="postgresql+asyncpg",
+            host=self.storage_db_host,
+            port=self.storage_db_port,
+            user=self.storage_db_user,
+            password=self.storage_db_pass,
+            path=f"/{self.storage_db_base}",
         )
 
     model_config = SettingsConfigDict(
