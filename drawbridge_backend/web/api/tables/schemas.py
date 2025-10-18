@@ -77,14 +77,6 @@ class DeleteFieldSchema(BaseModel):
     field_id: int
 
 
-class NameSpaceSchema(BaseModel):
-
-    id: int
-    name: str
-    description: str | None
-    tables: list[TableSchema]
-
-
 class _Val(BaseModel):
     value: str | int | float | bool | datetime.datetime | None
 
