@@ -315,3 +315,11 @@ class SqlAlchemyTablesService(AbstractTableService):
         tables: list[Table] = [map_table_model_to_domain(tm) for tm in table_models]
 
         return tables
+
+    # TODO: Remove it after initializing Policies for namespaces and tables
+    async def fetch_all_tables(self) -> list[Table]:
+        """Возвращает список всех таблиц."""
+        stmt = select(TableModel).options(selectinload(TableModel.fields))
+        result = await self._db_session.execute(stmt)
+        table_models = result.scalars().all()
+        return [map_table_model_to_domain(tm) for tm in table_models]
