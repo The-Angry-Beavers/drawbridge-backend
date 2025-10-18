@@ -210,7 +210,7 @@ class SqlAlchemyTablesService(AbstractTableService):
         result = await self._db_session.execute(stmt)
         table_model: TableModel | None = result.scalar_one_or_none()
         if not table_model:
-            raise ValueError("There is no table with id=%s")
+            raise ValueError("There is no such table with id=%s" % table_id)
 
         return map_table_model_to_domain(table_model)
 
