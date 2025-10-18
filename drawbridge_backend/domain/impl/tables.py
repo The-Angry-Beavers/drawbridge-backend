@@ -1,9 +1,21 @@
-from typing import Final, Type, Any
+from typing import Final, Type, Any, cast
 
-from sqlalchemy import MetaData, Table as SATable, Column, Integer
+from sqlalchemy import (
+    MetaData,
+    Table as SATable,
+    Column,
+    Integer,
+    select,
+    Select,
+    update,
+    delete,
+)
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
+from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import sqltypes as sqlalchemy_types
+from typing_extensions import TypeVar
 
+from drawbridge_backend.db.models.tables import TableModel, FieldModel
 from drawbridge_backend.domain.enums import DataTypeEnum
 from drawbridge_backend.domain.tables.entities import (
     UpdateRow,
@@ -13,6 +25,14 @@ from drawbridge_backend.domain.tables.entities import (
     FilteringParam,
     Table,
     UnSavedTable,
+    RowData,
+    BaseValue,
+    IntValue,
+    StringValue,
+    BoolValue,
+    FloatValue,
+    DateTimeValue,
+    Field,
 )
 from drawbridge_backend.domain.tables.table_service import AbstractTableService
 
@@ -27,59 +47,231 @@ SQLALCHEMY_TYPES_MAP: Final[
 }
 
 
-# def get_sa_table(table: Table, metadata: MetaData, engine: AsyncEngine) -> SATable:
-#     columns = [Column("id", Integer, primary_key=True, autoincrement=True)]
-#     for field in table.fields:
-#         col_type = SQLALCHEMY_TYPES_MAP[field.data_type]
-#         columns.append(
-#             Column(
-#                 field.name,
-#                 col_type,
-#                 nullable=field.is_nullable,
-#                 default=field.default_value,
-#             )
-#         )
-#
-#     return SATable(table.name, metadata, *columns, autoload_with=engine)
-#
-#
-# class SqlAlchemyTablesService(AbstractTableService):
-#
-#     def __init__(
-#         self,
-#         db_session: AsyncSession,
-#         storage_db_session: AsyncSession,
-#         storage_engine: AsyncEngine,
-#     ) -> None:
-#         self._db_session = db_session
-#         self._storage_db_session = storage_db_session
-#         self._metadata = MetaData()
-#         self._storage_engine = storage_engine
-#
-#     async def fetch_rows(
-#         self,
-#         table: Table,
-#         limit: int = 100,
-#         offset: int = 0,
-#         ordering_params: list[OrderingParam] | None = None,
-#         filtering_params: list[FilteringParam] | None = None,
-#     ) -> list[Row]:
-#         pass
-#
-#     async def insert_rows(self, rows: list[InsertRow]) -> list[Row]:
-#         pass
-#
-#     async def update_rows(self, rows: list[UpdateRow]) -> list[Row]:
-#         pass
-#
-#     async def delete_rows(self, table: Table, row_ids: list[int]) -> None:
-#         pass
-#
-#     async def update_table(self, table: Table) -> Table:
-#         pass
-#
-#     async def create_table(self, table: UnSavedTable) -> Table:
-#         pass
-#
-#     async def get_table_by_id(self, table_id: int) -> Table | None:
-#         pass
+def get_sa_table(table: Table, metadata: MetaData) -> SATable:
+    columns = [Column("id", Integer, primary_key=True, autoincrement=True)]
+    for field in table.fields:
+        col_type = SQLALCHEMY_TYPES_MAP[field.data_type]
+        columns.append(
+            Column(
+                field.name,
+                col_type,
+                nullable=field.is_nullable,
+                default=field.default_value,
+            )
+        )
+
+    return SATable(table.name, metadata, *columns)
+
+
+def map_to_rows(table: Table, dict_rows: list[dict[str, Any]]) -> list[Row]:
+    rows: list[Row] = []
+    for d in dict_rows:
+        values: list[RowData[BaseValue]] = []
+        for field in table.fields:
+            raw_value = d.get(field.name)
+            if raw_value is None:
+                val: BaseValue = BaseValue(None)
+            elif field.data_type == DataTypeEnum.INT:
+                val = IntValue(raw_value)
+            elif field.data_type == DataTypeEnum.STRING:
+                val = StringValue(raw_value)
+            elif field.data_type == DataTypeEnum.BOOL:
+                val = BoolValue(raw_value)
+            elif field.data_type == DataTypeEnum.FLOAT:
+                val = FloatValue(raw_value)
+            elif field.data_type == DataTypeEnum.DATETIME:
+                val = DateTimeValue(raw_value)
+            else:
+                val = BaseValue(raw_value)
+            values.append(RowData(field_id=field.field_id, value=val))
+        rows.append(Row(table=table, row_id=d["id"], values=values))
+    return rows
+
+
+T = TypeVar("T", bound=Any)
+
+
+def _add_ordering_params_to_stmt(
+    stmt: Select[T], ordering_params: list[OrderingParam]
+) -> Select[T]:
+    return stmt
+
+
+def _add_filtering_params_to_stmt(
+    stmt: Select[T], filtering_params: list[FilteringParam]
+) -> Select[T]:
+    return stmt
+
+
+class SqlAlchemyTablesService(AbstractTableService):
+    def __init__(
+        self,
+        db_session: AsyncSession,
+        storage_db_session: AsyncSession,
+        storage_engine: AsyncEngine,
+    ) -> None:
+        self._db_session = db_session
+        self._storage_db_session = storage_db_session
+        self._metadata = MetaData()
+        self._storage_engine = storage_engine
+
+    async def create_table(self, table: UnSavedTable) -> Table:
+        table_model = TableModel(
+            name=table.name,
+            verbose_name=table.verbose_name or table.name,
+            description=table.description,
+        )
+        self._db_session.add(table_model)
+        await self._db_session.flush()
+
+        for f in table.fields:
+            field_model = FieldModel(
+                table_id=table_model.id,
+                name=f.name,
+                verbose_name=f.verbose_name,
+                data_type=f.data_type,
+                is_nullable=f.is_nullable,
+                default_value=f.default_value,
+            )
+            self._db_session.add(field_model)
+
+        await self._db_session.commit()
+
+        sa_table = get_sa_table(
+            Table(
+                table_id=table_model.id,
+                name=table_model.name,
+                fields=[
+                    Field(
+                        _field_id=field_model.id,
+                        name=field_model.name,
+                        verbose_name=field_model.verbose_name,
+                        data_type=field_model.data_type,
+                        is_nullable=field_model.is_nullable,
+                        default_value=field_model.default_value,
+                    )
+                    for field_model in table_model.fields
+                ],
+            ),
+            self._metadata,
+        )
+
+        async with self._storage_engine.begin() as conn:
+            await conn.run_sync(sa_table.create)
+
+        return await self.get_table_by_id(table_model.id)  # type: ignore[return-value]
+
+    async def get_table_by_id(self, table_id: int) -> Table | None:
+        """Возвращает доменную модель таблицы по её ID."""
+        stmt = (
+            select(TableModel)
+            .filter_by(id=table_id)
+            .options(selectinload(TableModel.fields))
+        )
+        result = await self._db_session.execute(stmt)
+        table_model: TableModel | None = result.scalar_one_or_none()
+        if not table_model:
+            return None
+
+        fields = [
+            Field(
+                _field_id=f.id,
+                name=f.name,
+                verbose_name=f.verbose_name,
+                data_type=f.data_type,
+                is_nullable=f.is_nullable,
+                default_value=f.default_value,
+            )
+            for f in table_model.fields
+        ]
+
+        return Table(
+            table_id=table_model.id,
+            name=table_model.name,
+            fields=fields,
+            verbose_name=table_model.verbose_name,
+            description=table_model.description,
+        )
+
+    async def update_table(self, table: Table) -> Table:
+        """Обновляет метаданные таблицы."""
+        stmt = (
+            update(TableModel)
+            .filter_by(id=table.table_id)
+            .values(
+                name=table.name,
+                verbose_name=table.verbose_name,
+                description=table.description,
+            )
+            .returning(TableModel.id)
+        )
+        await self._db_session.execute(stmt)
+        await self._db_session.commit()
+        return await self.get_table_by_id(table.table_id)  # type: ignore[return-value]
+
+    async def delete_rows(self, table: Table, row_ids: list[int]) -> None:
+        sa_table = get_sa_table(table, self._metadata)
+        stmt = delete(sa_table).where(sa_table.c.id.in_(row_ids))
+        await self._storage_db_session.execute(stmt)
+        await self._storage_db_session.commit()
+
+    async def insert_rows(self, rows: list[InsertRow]) -> list[Row]:
+        if not rows:
+            return []
+
+        table = rows[0].table
+        sa_table = get_sa_table(table, self._metadata)
+
+        insert_values = []
+        for r in rows:
+            row_data = {}
+            for rd in r.values:
+                field = table.get_field_by_id(rd.field_id)
+                if not field:
+                    raise ValueError(
+                        f"Field with id={rd.field_id} not found in table '{table.name}'"
+                    )
+                row_data[field.name] = rd.value.value
+            insert_values.append(row_data)
+
+        stmt = sa_table.insert().returning(sa_table)
+        result = await self._storage_db_session.execute(stmt, insert_values)
+        await self._storage_db_session.commit()
+
+        return map_to_rows(table, cast(list[dict[str, Any]], result.mappings().all()))
+
+    async def update_rows(self, rows: list[UpdateRow]) -> list[Row]:
+        if not rows:
+            return []
+
+        table = rows[0].table
+        sa_table = get_sa_table(table, self._metadata)
+
+        updated_rows: list[Row] = []
+
+        for r in rows:
+            update_data = {}
+            for rd in r.new_values:
+                field = table.get_field_by_id(rd.field_id)
+                if not field:
+                    raise ValueError(
+                        f"Field with id={rd.field_id} not found in table '{table.name}'"
+                    )
+                update_data[field.name] = rd.value.value
+
+            stmt = (
+                sa_table.update()
+                .where(sa_table.c.id == r.row_id)
+                .values(**update_data)
+                .returning(sa_table)
+            )
+            result = await self._storage_db_session.execute(stmt)
+            updated_rows.extend(
+                map_to_rows(
+                    table,
+                    cast(list[dict[str, Any]], result.mappings().all()),
+                )
+            )
+
+        await self._storage_db_session.commit()
+        return updated_rows

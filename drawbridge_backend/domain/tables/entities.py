@@ -103,6 +103,13 @@ class Table:
     verbose_name: str | None = None
     description: str | None = None
 
+    def get_field_by_id(self, field_id: int) -> Field | None:
+        for f in self.fields:
+            if f.field_id == field_id:
+                return f
+
+        return None
+
 
 @dataclasses.dataclass
 class UnSavedTable:
