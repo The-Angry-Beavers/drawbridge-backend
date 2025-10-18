@@ -2,19 +2,16 @@ from fastapi import APIRouter
 
 from drawbridge_backend.domain.tables.entities import UnSavedTable, InsertRow, UpdateRow
 from drawbridge_backend.web.api.tables.schemas import (
-    AddFieldSchema,
-    DeleteFieldSchema,
     FetchRowsRequestSchema,
     FetchRowsResponseSchema,
-    FieldSchema,
     InsertRowsRequestSchema,
     InsertRowsResponseSchema,
     NameSpaceSchema,
     TableSchema,
-    UpdateFieldSchema,
     UpdateRowsRequestSchema,
     UpdateTableSchema,
     RowSchema,
+    DeleteRowsRequestSchema,
 )
 from drawbridge_backend.web.dependencies.tables import TableServiceDep
 
@@ -32,6 +29,7 @@ async def retrieve_tables(
         for t in await table_service.fetch_all_tables()
     ]
 
+
 @router.get("/tables/{table_id}", tags=["tables"])
 async def retrieve_table_by_id(
     table_id: int,
@@ -40,6 +38,7 @@ async def retrieve_table_by_id(
     """Retrieve a table by its ID."""
     table = await table_service.get_table_by_id(table_id)
     return TableSchema.model_validate(table, from_attributes=True)
+
 
 @router.post("/tables", tags=["tables"])
 async def create_table(
@@ -103,6 +102,24 @@ async def insert_table_rows(
     return InsertRowsResponseSchema(success=is_success, errors=errors)
 
 
+async def delete_table_rows(
+    req: DeleteRowsRequestSchema,
+    table_service: TableServiceDep,
+) -> InsertRowsResponseSchema:
+    """Delete rows from a table."""
+    is_success = True
+    errors: list[str] = []
+
+    try:
+        table = await table_service.get_table_by_id(req.table_id)
+        await table_service.delete_rows(table, req.row_ids)
+    except Exception as e:
+        errors.append(str(e))
+        is_success = False
+
+    return InsertRowsResponseSchema(success=is_success, errors=errors)
+
+
 @router.post("/tables/updateRows", tags=["rows"])
 async def update_table_row(
     req: UpdateRowsRequestSchema,
@@ -133,21 +150,21 @@ async def retrieve_namespaces() -> list[NameSpaceSchema]:
     raise NotImplementedError
 
 
-@router.delete("/tables/deleteField", tags=["fields"])
-async def delete_table_field(req: DeleteFieldSchema) -> TableSchema:
-    """Delete a field from a table."""
-    raise NotImplementedError
-
-
-@router.patch("/tables/updateField", tags=["fields"])
-async def update_table_field(req: UpdateFieldSchema) -> TableSchema:
-    """
-    Update a field in a table.
-    """
-    raise NotImplementedError
-
-
-@router.post("/tables/addField", tags=["fields"])
-async def add_table_field(req: AddFieldSchema) -> FieldSchema:
-    """Add a field to a table."""
-    raise NotImplementedError
+# @router.delete("/tables/deleteField", tags=["fields"])
+# async def delete_table_field(req: DeleteFieldSchema) -> TableSchema:
+#     """Delete a field from a table."""
+#     raise NotImplementedError
+#
+#
+# @router.patch("/tables/updateField", tags=["fields"])
+# async def update_table_field(req: UpdateFieldSchema) -> TableSchema:
+#     """
+#     Update a field in a table.
+#     """
+#     raise NotImplementedError
+#
+#
+# @router.post("/tables/addField", tags=["fields"])
+# async def add_table_field(req: AddFieldSchema) -> FieldSchema:
+#     """Add a field to a table."""
+#     raise NotImplementedError

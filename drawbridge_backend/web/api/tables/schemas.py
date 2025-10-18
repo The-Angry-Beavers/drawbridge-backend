@@ -135,3 +135,8 @@ class UpdateRowsRequestSchema(BaseModel):
 class InsertRowsResponseSchema(BaseModel):
     success: bool
     errors: list[str] | None
+
+
+class DeleteRowsRequestSchema(BaseModel):
+    table_id: int
+    row_ids: list[int]
