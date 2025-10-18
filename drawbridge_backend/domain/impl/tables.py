@@ -111,6 +111,29 @@ def _add_filtering_params_to_stmt(
     return stmt
 
 
+def map_table_model_to_domain(table_model: TableModel) -> Table:
+    """Преобразует TableModel в доменную модель Table."""
+    fields = [
+        Field(
+            _field_id=f.id,
+            name=f.name,
+            verbose_name=f.verbose_name,
+            data_type=f.data_type,
+            is_nullable=f.is_nullable,
+            default_value=f.default_value,
+        )
+        for f in table_model.fields
+    ]
+
+    return Table(
+        table_id=table_model.id,
+        name=table_model.name,
+        fields=fields,
+        verbose_name=table_model.verbose_name,
+        description=table_model.description,
+    )
+
+
 class SqlAlchemyTablesService(AbstractTableService):
     def __init__(
         self,
@@ -165,32 +188,13 @@ class SqlAlchemyTablesService(AbstractTableService):
             self._db_session.add(field_model)
 
         await self._db_session.flush()
-
         saved_table = await self.get_table_by_id(table_model.id)
 
-        sa_table = get_sa_table(
-            Table(
-                table_id=table_model.id,
-                name=table_model.name,
-                fields=[
-                    Field(
-                        _field_id=field_model.id,
-                        name=field_model.name,
-                        verbose_name=field_model.verbose_name,
-                        data_type=field_model.data_type,
-                        is_nullable=field_model.is_nullable,
-                        default_value=field_model.default_value,
-                    )
-                    for field_model in table_model.fields
-                ],
-            ),
-            self._metadata,
-        )
-
+        sa_table = get_sa_table(saved_table, self._metadata)
         async with self._storage_engine.begin() as conn:
             await conn.run_sync(sa_table.create)
 
-        return saved_table # type: ignore[return-value]
+        return saved_table  # type: ignore[return-value]
 
     async def get_table_by_id(self, table_id: int) -> Table:
         """Возвращает доменную модель таблицы по её ID."""
@@ -204,25 +208,7 @@ class SqlAlchemyTablesService(AbstractTableService):
         if not table_model:
             raise ValueError("There is no table with id=%s")
 
-        fields = [
-            Field(
-                _field_id=f.id,
-                name=f.name,
-                verbose_name=f.verbose_name,
-                data_type=f.data_type,
-                is_nullable=f.is_nullable,
-                default_value=f.default_value,
-            )
-            for f in table_model.fields
-        ]
-
-        return Table(
-            table_id=table_model.id,
-            name=table_model.name,
-            fields=fields,
-            verbose_name=table_model.verbose_name,
-            description=table_model.description,
-        )
+        return map_table_model_to_domain(table_model)
 
     async def update_table(self, table: Table) -> Table:
         """Обновляет метаданные таблицы."""
@@ -326,27 +312,6 @@ class SqlAlchemyTablesService(AbstractTableService):
         result = await self._db_session.execute(stmt)
         table_models = result.scalars().all()
 
-        tables: list[Table] = []
-        for tm in table_models:
-            fields = [
-                Field(
-                    _field_id=f.id,
-                    name=f.name,
-                    verbose_name=f.verbose_name,
-                    data_type=f.data_type,
-                    is_nullable=f.is_nullable,
-                    default_value=f.default_value,
-                )
-                for f in tm.fields
-            ]
-            tables.append(
-                Table(
-                    table_id=tm.id,
-                    name=tm.name,
-                    fields=fields,
-                    verbose_name=tm.verbose_name,
-                    description=tm.description,
-                )
-            )
+        tables: list[Table] = [map_table_model_to_domain(tm) for tm in table_models]
 
         return tables
