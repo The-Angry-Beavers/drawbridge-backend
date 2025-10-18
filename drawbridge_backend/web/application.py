@@ -28,12 +28,11 @@ def get_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=["https://d5df28gmfmto92a1iqoc.bixf7e87.apigw.yandexcloud.net"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
-
 
     # Main router for the API.
     app.include_router(router=api_router, prefix="/api")
