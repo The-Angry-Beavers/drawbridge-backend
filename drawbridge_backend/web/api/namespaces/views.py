@@ -88,7 +88,7 @@ async def list_namespaces(
 
 @router.post("/namespaces", tags=["namespaces"])
 async def create_namespace(
-    request: CreateNameSpaceSchema, session: SessionDep
+    request: CreateNameSpaceSchema, session: SessionDep, user: CurrentUserDep
 ) -> NameSpaceSchema:
     """Create namespace"""
     model_instance = NameSpaceModel(
@@ -96,6 +96,14 @@ async def create_namespace(
         description=request.description,
     )
     session.add(model_instance)
+    session.flush()
+
+    NameSpacePermissionModel(
+        namespace_id=model_instance.id,
+        user_id=user.id,
+        can_edit=True,
+    )
+
     await session.commit()
     return NameSpaceSchema.model_validate(model_instance, from_attributes=True)
 
