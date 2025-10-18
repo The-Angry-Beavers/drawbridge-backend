@@ -7,6 +7,7 @@ class DataTypeEnum(StrEnum):
     STRING = auto()
     BOOL = auto()
     DATETIME = auto()
+    CHOICE = auto()
 
 class OperatorEnum(StrEnum):
     EQ = "="

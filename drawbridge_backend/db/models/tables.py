@@ -58,8 +58,13 @@ class FieldModel(Base):
     default_value: Mapped[str | None] = mapped_column(String(256), nullable=True)
     table: Mapped["TableModel"] = relationship(back_populates="fields")
 
+    choices: Mapped[list["FieldChoiceModel"]] = relationship(
+        back_populates="field",
+        cascade="all, delete-orphan",
+    )
 
-class FieldChoices(Base):
+
+class FieldChoiceModel(Base):
     """
     Base class for all field choices models.
     """
@@ -69,3 +74,5 @@ class FieldChoices(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     field_id: Mapped[int] = mapped_column(ForeignKey("fields.id"), nullable=False)
     value: Mapped[str] = mapped_column(String(256), nullable=False)
+
+    field: Mapped["FieldModel"] = relationship(back_populates="choices")

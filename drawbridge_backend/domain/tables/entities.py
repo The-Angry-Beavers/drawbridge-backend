@@ -59,6 +59,15 @@ class FloatValue(BaseValue):
 
 
 @dataclasses.dataclass
+class ChoiceValue(BaseValue):
+    value: int
+
+    @property
+    def data_type(self) -> DataTypeEnum:
+        return DataTypeEnum.CHOICE
+
+
+@dataclasses.dataclass
 class DateTimeValue(BaseValue):
     value: datetime.datetime
 
@@ -77,7 +86,7 @@ class RowData(Generic[VT]):
 
     @property
     def data_type(self) -> DataTypeEnum:
-        return self.value.data_type # type:ignore
+        return self.value.data_type  # type:ignore
 
 
 @dataclasses.dataclass
@@ -109,6 +118,7 @@ class Field:
     data_type: DataTypeEnum
     is_nullable: bool
     default_value: str | None = None
+    choices: list["FieldChoice"] = dataclasses.field(default_factory=list)
 
     @property
     def field_id(self) -> int:
@@ -120,12 +130,32 @@ class Field:
 
 
 @dataclasses.dataclass
+class UnSavedChoice:
+    value: str
+
+
+@dataclasses.dataclass
+class FieldChoice:
+    _choice_id: int
+    value: str
+
+    @property
+    def choice_id(self) -> int:
+        return self._choice_id
+
+    @choice_id.setter
+    def choice_id(self, value: int) -> None:
+        raise AttributeError("choice_id is read-only")
+
+
+@dataclasses.dataclass
 class UnSavedField:
     name: str
     verbose_name: str
     data_type: DataTypeEnum
     is_nullable: bool
     default_value: str | None = None
+    choices: list[UnSavedChoice] = dataclasses.field(default_factory=list)
 
 
 @dataclasses.dataclass

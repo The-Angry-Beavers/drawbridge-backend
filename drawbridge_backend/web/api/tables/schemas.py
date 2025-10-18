@@ -10,6 +10,11 @@ from drawbridge_backend.domain.tables.entities import (
 )
 
 
+class ChoiceSchema(BaseModel):
+    id: int = Field(alias="choice_id")
+    value: str
+
+
 class FieldSchema(BaseModel):
     id: int = Field(alias="field_id")
     name: str
@@ -17,7 +22,7 @@ class FieldSchema(BaseModel):
     data_type: DataTypeEnum
     is_nullable: bool
     default_value: str | None
-    choices: list[str] | None = None
+    choices: list[ChoiceSchema] | None = None
 
 
 class UpdateFieldDataSchema(BaseModel):

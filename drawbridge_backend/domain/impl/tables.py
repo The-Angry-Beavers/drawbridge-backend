@@ -9,8 +9,6 @@ from sqlalchemy import (
     func,
     select,
     update,
-)
-from sqlalchemy import (
     Table as SATable,
 )
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -18,7 +16,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import sqltypes as sqlalchemy_types
 from typing_extensions import TypeVar
 
-from drawbridge_backend.db.models.tables import FieldModel, TableModel
+from drawbridge_backend.db.models.tables import FieldModel, TableModel, FieldChoiceModel
 from drawbridge_backend.domain.enums import DataTypeEnum
 from drawbridge_backend.domain.tables.entities import (
     BaseValue,
@@ -36,6 +34,8 @@ from drawbridge_backend.domain.tables.entities import (
     Table,
     UnSavedTable,
     UpdateRow,
+    ChoiceValue,
+    FieldChoice,
 )
 from drawbridge_backend.domain.tables.table_service import AbstractTableService
 
@@ -47,6 +47,7 @@ SQLALCHEMY_TYPES_MAP: Final[
     DataTypeEnum.BOOL: sqlalchemy_types.Boolean,
     DataTypeEnum.FLOAT: sqlalchemy_types.Float,
     DataTypeEnum.DATETIME: sqlalchemy_types.DateTime,
+    DataTypeEnum.CHOICE: sqlalchemy_types.Integer,
 }
 
 
@@ -87,6 +88,8 @@ def map_to_rows(table: Table, dict_rows: list[dict[str, Any]]) -> list[Row]:
                 val = BoolValue(raw_value)
             elif field.data_type == DataTypeEnum.FLOAT:
                 val = FloatValue(raw_value)
+            elif field.data_type == DataTypeEnum.CHOICE:
+                val = ChoiceValue(raw_value)
             elif field.data_type == DataTypeEnum.DATETIME:
                 val = DateTimeValue(raw_value)
             else:
@@ -125,6 +128,7 @@ def map_table_model_to_domain(table_model: TableModel) -> Table:
             data_type=f.data_type,
             is_nullable=f.is_nullable,
             default_value=f.default_value,
+            choices=[FieldChoice(_choice_id=c.id, value=c.value) for c in f.choices],
         )
         for f in table_model.fields
     ]
@@ -189,7 +193,18 @@ class SqlAlchemyTablesService(AbstractTableService):
                 is_nullable=f.is_nullable,
                 default_value=f.default_value,
             )
+            # N+1 problem, but it's ok for now
+            # Hackathon style code :)))
             self._db_session.add(field_model)
+            await self._db_session.flush()
+
+            if f.data_type is DataTypeEnum.CHOICE:
+                for choice in f.choices:
+                    choice_model = FieldChoiceModel(
+                        field_id=field_model.id,
+                        value=choice.value,
+                    )
+                    self._db_session.add(choice_model)
 
         await self._db_session.flush()
         saved_table = await self.get_table_by_id(table_model.id)
@@ -311,7 +326,7 @@ class SqlAlchemyTablesService(AbstractTableService):
         stmt = (
             select(TableModel)
             .where(TableModel.id.in_(table_ids))
-            .options(selectinload(TableModel.fields))
+            .options(selectinload(TableModel.fields).selectinload(FieldModel.choices))
         )
         result = await self._db_session.execute(stmt)
         table_models = result.scalars().all()
@@ -323,7 +338,9 @@ class SqlAlchemyTablesService(AbstractTableService):
     # TODO: Remove it after initializing Policies for namespaces and tables
     async def fetch_all_tables(self) -> list[Table]:
         """Возвращает список всех таблиц."""
-        stmt = select(TableModel).options(selectinload(TableModel.fields))
+        stmt = select(TableModel).options(
+            selectinload(TableModel.fields).selectinload(FieldModel.choices)
+        )
         result = await self._db_session.execute(stmt)
         table_models = result.scalars().all()
         return [map_table_model_to_domain(tm) for tm in table_models]
