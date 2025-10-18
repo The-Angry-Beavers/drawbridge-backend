@@ -20,3 +20,6 @@ class UpdateNameSpaceSchema(BaseModel):
     description: str | None = None
 
 
+class MoveTableToNamespaceSchema(BaseModel):
+    target_namespace_id: int
+    table_id: int

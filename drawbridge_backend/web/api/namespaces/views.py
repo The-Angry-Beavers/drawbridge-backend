@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select, Select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -12,6 +12,7 @@ from drawbridge_backend.web.api.namespaces.schemas import (
     NameSpaceSchema,
     CreateNameSpaceSchema,
     UpdateNameSpaceSchema,
+    MoveTableToNamespaceSchema,
 )
 from drawbridge_backend.web.api.sessions import CurrentUserDep
 
@@ -95,7 +96,7 @@ async def create_namespace(
 async def partial_update_namespace(
     namespace_id: int,
     session: SessionDep,
-    request: UpdateNameSpaceSchema = Body(...),
+    request: UpdateNameSpaceSchema,
 ) -> NameSpaceSchema:
     """Update namespace"""
     namespace_instance = _get_namespace_by_id(namespace_id, session)
@@ -110,10 +111,34 @@ async def partial_update_namespace(
     )
 
 
-@router.patch("/namespaces/{namespace_id}", tags=["namespaces"])
+@router.delete("/namespaces/{namespace_id}", tags=["namespaces"])
 async def delete_namespace(namespace_id: int, session: SessionDep) -> None:
     """Delete namespace"""
     namespace_instance = _get_namespace_by_id(namespace_id, session)
     await session.delete(namespace_instance)
+    await session.commit()
+    return
+
+
+@router.post("/namespaces/moveTable", tags=["namespaces"])
+async def move_table_to_namespace(
+    req: MoveTableToNamespaceSchema,
+    session: SessionDep,
+) -> None:
+    """Move table to another namespace"""
+    namespace_id = req.target_namespace_id
+    table_id = req.table_id
+
+    namespace_instance = await _get_namespace_by_id(namespace_id, session)
+    stmt = select(TableModel).filter_by(id=table_id)
+    result = await session.execute(stmt)
+    table_instance = result.scalar_one_or_none()
+    if table_instance is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Table with ID '{table_id}' not found.",
+        )
+    table_instance.namespace_id = namespace_id
+    session.add(table_instance)
     await session.commit()
     return
