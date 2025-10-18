@@ -96,6 +96,15 @@ class Field:
 
 
 @dataclasses.dataclass
+class UnSavedField:
+    name: str
+    verbose_name: str
+    data_type: DataTypeEnum
+    is_nullable: bool
+    default_value: str | None = None
+
+
+@dataclasses.dataclass
 class Table:
     table_id: int
     name: str
@@ -110,10 +119,17 @@ class Table:
 
         return None
 
+    def get_field_by_name(self, field_name: str) -> Field | None:
+        for f in self.fields:
+            if f.name == field_name:
+                return f
+
+        return None
+
 
 @dataclasses.dataclass
 class UnSavedTable:
     name: str
-    fields: list[Field]
+    fields: list[UnSavedField]
     verbose_name: str | None = None
     description: str | None = None

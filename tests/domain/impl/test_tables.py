@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 
 from drawbridge_backend.domain.enums import DataTypeEnum
+from drawbridge_backend.domain.impl.tables import SqlAlchemyTablesService
 from drawbridge_backend.domain.tables.entities import (
     Field,
     UnSavedTable,
@@ -9,8 +10,8 @@ from drawbridge_backend.domain.tables.entities import (
     RowData,
     IntValue,
     StringValue,
+    UnSavedField,
 )
-from drawbridge_backend.domain.impl.tables import SqlAlchemyTablesService
 
 
 @pytest.mark.anyio
@@ -67,15 +68,13 @@ async def test_insert_and_fetch_rows(
     table_def = UnSavedTable(
         name="users",
         fields=[
-            Field(
-                _field_id=1,
+            UnSavedField(
                 name="username",
                 verbose_name="Username",
                 data_type=DataTypeEnum.STRING,
                 is_nullable=False,
             ),
-            Field(
-                _field_id=2,
+            UnSavedField(
                 name="score",
                 verbose_name="Score",
                 data_type=DataTypeEnum.INT,
@@ -84,21 +83,23 @@ async def test_insert_and_fetch_rows(
         ],
     )
     table = await service.create_table(table_def)
+    username_field_id = table.get_field_by_name("username").field_id
+    score_field_id = table.get_field_by_name("score").field_id
 
     # Вставляем строки
     rows_to_insert = [
         InsertRow(
             table=table,
             values=[
-                RowData(field_id=1, value=StringValue("Alice")),
-                RowData(field_id=2, value=IntValue(100)),
+                RowData(field_id=username_field_id, value=StringValue("Alice")),
+                RowData(field_id=score_field_id, value=IntValue(100)),
             ],
         ),
         InsertRow(
             table=table,
             values=[
-                RowData(field_id=1, value=StringValue("Bob")),
-                RowData(field_id=2, value=IntValue(150)),
+                RowData(field_id=username_field_id, value=StringValue("Bob")),
+                RowData(field_id=score_field_id, value=IntValue(150)),
             ],
         ),
     ]
@@ -128,15 +129,13 @@ async def test_update_and_delete_rows(
     table_def = UnSavedTable(
         name="test-case",
         fields=[
-            Field(
-                _field_id=1,
+            UnSavedField(
                 name="title",
                 verbose_name="Title",
                 data_type=DataTypeEnum.STRING,
                 is_nullable=False,
             ),
-            Field(
-                _field_id=2,
+            UnSavedField(
                 name="quantity",
                 verbose_name="Quantity",
                 data_type=DataTypeEnum.INT,
@@ -146,12 +145,15 @@ async def test_update_and_delete_rows(
     )
     table = await service.create_table(table_def)
 
+    title_field_id = table.get_field_by_name("title").field_id
+    quantity_field_id = table.get_field_by_name("quantity").field_id
+
     # Вставляем строку
     row = InsertRow(
         table=table,
         values=[
-            RowData(field_id=1, value=StringValue("Item1")),
-            RowData(field_id=2, value=IntValue(10)),
+            RowData(field_id=title_field_id, value=StringValue("Item1")),
+            RowData(field_id=quantity_field_id, value=IntValue(10)),
         ],
     )
     inserted_rows = await service.insert_rows([row])
@@ -165,7 +167,7 @@ async def test_update_and_delete_rows(
             UpdateRow(
                 table=table,
                 row_id=row_id,
-                new_values=[RowData(field_id=2, value=IntValue(20))],
+                new_values=[RowData(quantity_field_id, value=IntValue(20))],
             )
         ]
     )
