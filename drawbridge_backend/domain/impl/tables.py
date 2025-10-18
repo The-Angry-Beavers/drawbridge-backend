@@ -8,7 +8,7 @@ from sqlalchemy import (
     select,
     Select,
     update,
-    delete,
+    delete, func,
 )
 from sqlalchemy.ext.asyncio import AsyncSession, AsyncEngine
 from sqlalchemy.orm import selectinload
@@ -277,3 +277,10 @@ class SqlAlchemyTablesService(AbstractTableService):
 
         await self._storage_db_session.commit()
         return updated_rows
+
+    async def count_rows(self, table: Table) -> int:
+        sa_table = get_sa_table(table, self._metadata)
+        stmt = select(func.count()).select_from(sa_table)
+        result = await self._storage_db_session.execute(stmt)
+        count = result.scalar_one()
+        return int(count)

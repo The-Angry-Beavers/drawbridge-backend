@@ -6,7 +6,8 @@ from drawbridge_backend.domain.tables.entities import (
     InsertRow,
     Row,
     UpdateRow,
-    Table, UnSavedTable,
+    Table,
+    UnSavedTable,
 )
 
 
@@ -143,4 +144,8 @@ class AbstractTableService(abc.ABC):
     @abc.abstractmethod
     async def get_table_by_id(self, table_id: int) -> Table | None:
         """Get table metadata by ID"""
+        pass
+
+    @abc.abstractmethod
+    async def count_rows(self, table: Table) -> int:
         pass
