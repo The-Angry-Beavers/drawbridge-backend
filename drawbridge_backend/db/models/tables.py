@@ -5,6 +5,20 @@ from drawbridge_backend.db.base import Base
 from drawbridge_backend.domain.enums import DataTypeEnum
 
 
+class NameSpaceModel(Base):
+    """Base class for all namespace models."""
+
+    __tablename__ = "namespaces"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
+    description: Mapped[str | None]
+
+    tables: Mapped[list["TableModel"]] = relationship(
+        back_populates="namespace", cascade="protect"
+    )
+
+
 class TableModel(Base):
     """Base class for all table models."""
 
@@ -14,10 +28,14 @@ class TableModel(Base):
     name: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
     verbose_name: Mapped[str] = mapped_column(String(256), nullable=False)
     description: Mapped[str | None]
+    namespace_id: Mapped[int] = mapped_column(
+        ForeignKey("namespaces.id"), nullable=True
+    )
 
     fields: Mapped[list["FieldModel"]] = relationship(
         back_populates="table", cascade="all, delete-orphan"
     )
+    namespace: Mapped["NameSpaceModel"] = relationship(back_populates="tables")
 
 
 class FieldModel(Base):
