@@ -147,5 +147,9 @@ class AbstractTableService(abc.ABC):
         pass
 
     @abc.abstractmethod
+    async def get_tables_by_ids(self, table_ids: list[int]) -> list[Table]:
+        pass
+
+    @abc.abstractmethod
     async def count_rows(self, table: Table) -> int:
         pass

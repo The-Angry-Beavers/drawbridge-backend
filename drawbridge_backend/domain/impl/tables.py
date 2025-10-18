@@ -313,3 +313,40 @@ class SqlAlchemyTablesService(AbstractTableService):
         result = await self._storage_db_session.execute(stmt)
         count = result.scalar_one()
         return int(count)
+
+    async def get_tables_by_ids(self, table_ids: list[int]) -> list[Table]:
+        if not table_ids:
+            return []
+
+        stmt = (
+            select(TableModel)
+            .where(TableModel.id.in_(table_ids))
+            .options(selectinload(TableModel.fields))
+        )
+        result = await self._db_session.execute(stmt)
+        table_models = result.scalars().all()
+
+        tables: list[Table] = []
+        for tm in table_models:
+            fields = [
+                Field(
+                    _field_id=f.id,
+                    name=f.name,
+                    verbose_name=f.verbose_name,
+                    data_type=f.data_type,
+                    is_nullable=f.is_nullable,
+                    default_value=f.default_value,
+                )
+                for f in tm.fields
+            ]
+            tables.append(
+                Table(
+                    table_id=tm.id,
+                    name=tm.name,
+                    fields=fields,
+                    verbose_name=tm.verbose_name,
+                    description=tm.description,
+                )
+            )
+
+        return tables
