@@ -1,11 +1,12 @@
 from collections.abc import Sequence
 
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import select, Select
+from sqlalchemy import select, Select, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from drawbridge_backend.db.dependencies import SessionDep
+from drawbridge_backend.db.models.permissions import NameSpacePermissionModel
 from drawbridge_backend.db.models.tables import NameSpaceModel, TableModel, FieldModel
 from drawbridge_backend.db.models.users import User  # type: ignore
 from drawbridge_backend.web.api.namespaces.schemas import (
@@ -31,8 +32,16 @@ class NameSpaceNotFound(HTTPException):
 def _filter_namespaces_for_user(
     auth_user: User, stmt: Select[tuple[NameSpaceModel]]
 ) -> Select[tuple[NameSpaceModel]]:
-    # TODO: применить фильтры, например:
-    return stmt
+    accessible_namespace_ids = select(NameSpacePermissionModel.namespace_id).filter(
+        NameSpacePermissionModel.user_id == auth_user.id,
+        or_(
+            NameSpacePermissionModel.can_edit.is_(True),
+            NameSpacePermissionModel.can_view.is_(True),
+        ),
+    )
+
+    # Фильтруем namespaces по доступным id
+    return stmt.filter(NameSpaceModel.id.in_(accessible_namespace_ids))
 
 
 # Опасное дерьмо
