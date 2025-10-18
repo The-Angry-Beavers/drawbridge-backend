@@ -146,3 +146,7 @@ class AbstractTableService(abc.ABC):
     @abc.abstractmethod
     async def count_rows(self, table: Table) -> int:
         pass
+
+    @abc.abstractmethod
+    async def delete_table(self, table: Table) -> None:
+        pass

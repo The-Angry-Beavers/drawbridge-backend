@@ -38,6 +38,7 @@ class TableModel(Base):
         cascade="all, delete-orphan",
     )
     namespace: Mapped["NameSpaceModel"] = relationship(back_populates="tables")
+    is_delete: Mapped[bool] = mapped_column(nullable=False, server_default="false")
 
 
 class FieldModel(Base):

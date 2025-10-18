@@ -66,10 +66,9 @@ class TableSchema(BaseModel):
 
 
 class UpdateTableSchema(BaseModel):
-    name: str
-    verbose_name: str
-    description: str | None
-    namespace_id: int | None
+    name: str | None = None
+    verbose_name: str | None = None
+    description: str | None = None
 
 
 class DeleteFieldSchema(BaseModel):

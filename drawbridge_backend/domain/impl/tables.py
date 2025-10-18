@@ -344,3 +344,15 @@ class SqlAlchemyTablesService(AbstractTableService):
         result = await self._db_session.execute(stmt)
         table_models = result.scalars().all()
         return [map_table_model_to_domain(tm) for tm in table_models]
+
+    async def delete_table(self, table: Table) -> None:
+        """Удаляет таблицу и все связанные с ней данные."""
+        # Просто отметим что таблица удалена в метаданных
+        stmt = update(TableModel).filter_by(id=table.table_id).values(is_delete=True)
+        await self._db_session.execute(stmt)
+        await self._db_session.flush()
+
+
+        # sa_table = get_sa_table(table, self._metadata)
+        # async with self._storage_engine.begin() as conn:
+        #     await conn.run_sync(sa_table.drop)

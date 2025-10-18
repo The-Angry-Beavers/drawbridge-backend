@@ -48,15 +48,25 @@ async def create_table(
 
 
 @router.patch("/tables/{table_id}", tags=["tables"])
-async def update_table(table_id: int, req: UpdateTableSchema) -> TableSchema:
+async def update_table(
+    table_id: int,
+    req: UpdateTableSchema,
+    table_service: TableServiceDep,
+) -> TableSchema:
     """Retrieve a table by its ID."""
-    raise NotImplementedError
+    table = await table_service.get_table_by_id(table_id)
+    for attr, val in req.model_dump(exclude_unset=True).items():
+        setattr(table, attr, val)
+    await table_service.update_table(table)
+    return TableSchema.model_validate(table, from_attributes=True)
 
 
 @router.delete("/tables/{table_id}", tags=["tables"])
-async def delete_table(table_id: int) -> None:
+async def delete_table(table_id: int, table_service: TableServiceDep) -> None:
     """Delete a table by its ID."""
-    raise NotImplementedError
+    table = await table_service.get_table_by_id(table_id)
+    await table_service.delete_table(table)
+
 
 
 @router.post("/tables/fetchRows", tags=["rows"])
@@ -100,6 +110,7 @@ async def insert_table_rows(
 
     return InsertRowsResponseSchema(success=is_success, errors=errors)
 
+
 @router.post("/tables/deleteRows", tags=["rows"])
 async def delete_table_rows(
     req: DeleteRowsRequestSchema,
@@ -142,12 +153,6 @@ async def update_table_row(
 
     return InsertRowsResponseSchema(success=is_success, errors=errors)
 
-
-# @router.get("/namespaces", tags=["namespaces"])
-# async def retrieve_namespaces() -> list[NameSpaceSchema]:
-#     """Retrieve all available for user namespaces."""
-#     raise NotImplementedError
-#
 
 # @router.delete("/tables/deleteField", tags=["fields"])
 # async def delete_table_field(req: DeleteFieldSchema) -> TableSchema:
