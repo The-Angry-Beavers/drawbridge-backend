@@ -1,5 +1,6 @@
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Annotated
 
+from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from starlette.requests import Request
 
@@ -48,3 +49,6 @@ async def get_storage_db_engine(
         yield engine
     finally:
         pass
+
+
+SessionDep = Annotated[AsyncSession, Depends(get_db_session)]
