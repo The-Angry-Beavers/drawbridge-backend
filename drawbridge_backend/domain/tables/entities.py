@@ -1,6 +1,6 @@
 import dataclasses
-from typing import TypeVar, Generic, Any
 import datetime
+from typing import TypeVar, Generic, Any
 
 from drawbridge_backend.domain.enums import DataTypeEnum
 
@@ -119,12 +119,12 @@ class Table:
 
         return None
 
-    def get_field_by_name(self, field_name: str) -> Field | None:
+    def get_field_by_name(self, field_name: str) -> Field:
         for f in self.fields:
             if f.name == field_name:
                 return f
 
-        return None
+        raise ValueError("Field with name=%s is not exists")
 
 
 @dataclasses.dataclass

@@ -21,3 +21,6 @@ def get_tables_service(
         storage_db_session,
         storage_db_engine,
     )
+
+
+TableServiceDep = Annotated[SqlAlchemyTablesService, Depends(get_tables_service)]
