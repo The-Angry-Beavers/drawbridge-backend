@@ -15,7 +15,7 @@ class NameSpaceModel(Base):
     description: Mapped[str | None]
 
     tables: Mapped[list["TableModel"]] = relationship(
-        back_populates="namespace", cascade="protect"
+        back_populates="namespace",
     )
 
 
