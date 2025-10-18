@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 
+from drawbridge_backend.domain.tables.entities import UnSavedTable, InsertRow, UpdateRow
 from drawbridge_backend.web.api.tables.schemas import (
     AddFieldSchema,
     DeleteFieldSchema,
@@ -13,6 +14,7 @@ from drawbridge_backend.web.api.tables.schemas import (
     UpdateFieldSchema,
     UpdateRowsRequestSchema,
     UpdateTableSchema,
+    RowSchema,
 )
 from drawbridge_backend.web.dependencies.tables import TableServiceDep
 
@@ -21,13 +23,22 @@ router = APIRouter()
 
 @router.get("/tables", tags=["tables"])
 async def retrieve_tables(
-    namespace_id: int, table_service: TableServiceDep,
+    table_service: TableServiceDep,
+    namespace_id: int | None = None,
 ) -> list[TableSchema]:
     """Retrieve all available for user tables."""
     return [
         TableSchema.model_validate(t, from_attributes=True)
         for t in await table_service.fetch_all_tables()
     ]
+
+
+@router.post("/tables", tags=["tables"])
+async def create_table(
+    table_service: TableServiceDep, request: UnSavedTable
+) -> TableSchema:
+    table = await table_service.create_table(request)
+    return TableSchema.model_validate(table, from_attributes=True)
 
 
 @router.patch("/tables/{table_id}", tags=["tables"])
@@ -43,21 +54,69 @@ async def delete_table(table_id: int) -> None:
 
 
 @router.post("/tables/fetchRows", tags=["rows"])
-async def fetch_table_rows(req: FetchRowsRequestSchema) -> FetchRowsResponseSchema:
+async def fetch_table_rows(
+    req: FetchRowsRequestSchema,
+    table_service: TableServiceDep,
+) -> FetchRowsResponseSchema:
     """Fetch rows from a table."""
-    raise NotImplementedError
+    table = await table_service.get_table_by_id(req.table_id)
+    rows = await table_service.fetch_rows(
+        table=table,
+        limit=req.limit,
+        offset=req.offset,
+        ordering_params=req.ordering_params,
+        filtering_params=req.filter_params,
+    )
+    total_rows = await table_service.count_rows(table)
+
+    return FetchRowsResponseSchema(
+        total=total_rows,
+        rows=[RowSchema.model_validate(r, from_attributes=True) for r in rows],
+    )
 
 
 @router.post("/tables/insertRows", tags=["rows"])
-async def insert_table_rows(req: InsertRowsRequestSchema) -> InsertRowsResponseSchema:
+async def insert_table_rows(
+    req: InsertRowsRequestSchema,
+    table_service: TableServiceDep,
+) -> InsertRowsResponseSchema:
     """Insert rows into a table."""
-    raise NotImplementedError
+    is_success = True
+    errors: list[str] = []
+
+    try:
+        table = await table_service.get_table_by_id(req.table_id)
+        rows = [InsertRow(table, req_row.values) for req_row in req.rows]
+        inserted_rows = await table_service.insert_rows(rows)
+    except Exception as e:
+        errors.append(str(e))
+        is_success = False
+
+    return InsertRowsResponseSchema(success=is_success, errors=errors)
 
 
 @router.post("/tables/updateRows", tags=["rows"])
-async def update_table_row(req: UpdateRowsRequestSchema) -> InsertRowsResponseSchema:
+async def update_table_row(
+    req: UpdateRowsRequestSchema,
+    table_service: TableServiceDep,
+) -> InsertRowsResponseSchema:
     """Update a row in a table."""
-    raise NotImplementedError
+    table = await table_service.get_table_by_id(req.table_id)
+    is_success = True
+    errors: list[str] = []
+
+    try:
+        table = await table_service.get_table_by_id(req.table_id)
+        rows = [
+            UpdateRow(table, req_row.row_id, req_row.new_values)
+            for req_row in req.updated_rows
+        ]
+        inserted_rows = await table_service.update_rows(rows)
+    except Exception as e:
+        errors.append(str(e))
+        is_success = False
+
+    return InsertRowsResponseSchema(success=is_success, errors=errors)
 
 
 @router.get("/namespaces", tags=["namespaces"])

@@ -26,25 +26,45 @@ class BaseValue:
 class IntValue(BaseValue):
     value: int
 
+    @property
+    def data_type(self) -> DataTypeEnum:
+        return DataTypeEnum.INT
+
 
 @dataclasses.dataclass
 class StringValue(BaseValue):
     value: str
+
+    @property
+    def data_type(self) -> DataTypeEnum:
+        return DataTypeEnum.STRING
 
 
 @dataclasses.dataclass
 class BoolValue(BaseValue):
     value: bool
 
+    @property
+    def data_type(self) -> DataTypeEnum:
+        return DataTypeEnum.BOOL
+
 
 @dataclasses.dataclass
 class FloatValue(BaseValue):
     value: float
 
+    @property
+    def data_type(self) -> DataTypeEnum:
+        return DataTypeEnum.FLOAT
+
 
 @dataclasses.dataclass
 class DateTimeValue(BaseValue):
     value: datetime.datetime
+
+    @property
+    def data_type(self) -> DataTypeEnum:
+        return DataTypeEnum.DATETIME
 
 
 VT = TypeVar("VT", bound=BaseValue, contravariant=False)
@@ -54,6 +74,10 @@ VT = TypeVar("VT", bound=BaseValue, contravariant=False)
 class RowData(Generic[VT]):
     field_id: int
     value: VT
+
+    @property
+    def data_type(self) -> DataTypeEnum:
+        return self.value.data_type # type:ignore
 
 
 @dataclasses.dataclass

@@ -100,14 +100,16 @@ T = TypeVar("T", bound=Any)
 
 
 def _add_ordering_params_to_stmt(
-    stmt: Select[T], ordering_params: list[OrderingParam],
+    stmt: Select[T],
+    ordering_params: list[OrderingParam],
 ) -> Select[T]:
     # TODO: Implement
     return stmt
 
 
 def _add_filtering_params_to_stmt(
-    stmt: Select[T], filtering_params: list[FilteringParam],
+    stmt: Select[T],
+    filtering_params: list[FilteringParam],
 ) -> Select[T]:
     # TODO: Implement
     return stmt

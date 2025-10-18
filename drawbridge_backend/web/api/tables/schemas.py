@@ -1,19 +1,25 @@
 import datetime
+from typing import Generic
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing_extensions import TypeVar
 
 from drawbridge_backend.domain.enums import DataTypeEnum
-from drawbridge_backend.domain.tables.entities import FilteringParam, OrderingParam
+from drawbridge_backend.domain.tables.entities import (
+    FilteringParam,
+    OrderingParam,
+    RowData,
+)
 
 
 class FieldSchema(BaseModel):
-    id: int
+    id: int = Field(alias="field_id")
     name: str
     verbose_name: str
     data_type: DataTypeEnum
     is_nullable: bool
     default_value: str | None
-    choices: list[str] | None
+    choices: list[str] | None = None
 
 
 class UpdateFieldDataSchema(BaseModel):
@@ -21,7 +27,7 @@ class UpdateFieldDataSchema(BaseModel):
     verbose_name: str | None
     is_nullable: bool | None
     default_value: str | None
-    choices: list[str] | None
+    choices: list[str] | None = None
 
 
 class UpdateFieldSchema(BaseModel):
@@ -46,13 +52,12 @@ class CreateFieldSchema(BaseModel):
 
 class TableSchema(BaseModel):
 
-    id: int
+    id: int = Field(alias="table_id")
     name: str
     verbose_name: str
     description: str | None
-    namespace_id: int | None
-
-    last_modified_at: datetime.datetime
+    namespace_id: int | None = None
+    last_modified_at: datetime.datetime | None = None
 
     fields: list[FieldSchema]
 
@@ -77,31 +82,36 @@ class NameSpaceSchema(BaseModel):
     tables: list[TableSchema]
 
 
-class ValueSchema(BaseModel):
-    field_id: int
-    type: DataTypeEnum
+class _Val(BaseModel):
     value: str | int | float | bool | datetime.datetime | None
 
 
+class ValueSchema(BaseModel):
+    field_id: int
+    type: DataTypeEnum = Field(alias="data_type")
+    value: _Val
+
+
 class RowSchema(BaseModel):
-    id: int
+    id: int = Field(alias="row_id")
     values: list[ValueSchema]
 
 
 class FetchRowsRequestSchema(BaseModel):
+    table_id: int
     limit: int = 100
     offset: int = 0
-    filter_params: list[FilteringParam]
-    ordering_params: list[OrderingParam]
+    filter_params: list[FilteringParam] | None = None
+    ordering_params: list[OrderingParam] | None = None
 
 
 class FetchRowsResponseSchema(BaseModel):
     total: int
-    rows: RowSchema
+    rows: list[RowSchema]
 
 
 class InsertRowSchema(BaseModel):
-    values: list[ValueSchema]
+    values: list[RowData] # type: ignore
 
 
 class InsertRowsRequestSchema(BaseModel):
@@ -109,9 +119,14 @@ class InsertRowsRequestSchema(BaseModel):
     rows: list[InsertRowSchema]
 
 
+class UpdateRowSchema(BaseModel):
+    row_id: int
+    new_values: list[RowData] # type: ignore
+
+
 class UpdateRowsRequestSchema(BaseModel):
     table_id: int
-    updated_rows: list[InsertRowSchema]
+    updated_rows: list[UpdateRowSchema]
 
 
 class InsertRowsResponseSchema(BaseModel):
