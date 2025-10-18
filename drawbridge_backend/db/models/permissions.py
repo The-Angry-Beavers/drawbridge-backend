@@ -16,7 +16,7 @@ class NameSpacePermissionModel(Base):
     )
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), nullable=False)
 
-    can_edit = mapped_column(nullable=False, default=False)
+    can_edit: Mapped[bool] = mapped_column(nullable=False, default=False)
 
 
 class TablePermissionModel(Base):
@@ -30,8 +30,8 @@ class TablePermissionModel(Base):
     table_id: Mapped[int] = mapped_column(ForeignKey("tables.id"), nullable=False)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), nullable=False)
 
-    is_edit_disabled = mapped_column(nullable=False, default=False)
-    is_read_disabled = mapped_column(nullable=False, default=False)
+    is_edit_disabled: Mapped[bool] = mapped_column(nullable=False, default=False)
+    is_read_disabled: Mapped[bool] = mapped_column(nullable=False, default=False)
 
 
 class FieldPermissionModel(Base):
@@ -45,5 +45,5 @@ class FieldPermissionModel(Base):
     field_id: Mapped[int] = mapped_column(ForeignKey("fields.id"), nullable=False)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), nullable=False)
 
-    is_edit_disabled = mapped_column(nullable=False, default=False)
-    is_read_disabled = mapped_column(nullable=False, default=False)
+    is_edit_disabled: Mapped[bool] = mapped_column(nullable=False, default=False)
+    is_read_disabled: Mapped[bool] = mapped_column(nullable=False, default=False)
