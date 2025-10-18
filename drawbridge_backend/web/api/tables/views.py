@@ -32,6 +32,14 @@ async def retrieve_tables(
         for t in await table_service.fetch_all_tables()
     ]
 
+@router.get("/tables/{table_id}", tags=["tables"])
+async def retrieve_table_by_id(
+    table_id: int,
+    table_service: TableServiceDep,
+) -> TableSchema:
+    """Retrieve a table by its ID."""
+    table = await table_service.get_table_by_id(table_id)
+    return TableSchema.model_validate(table, from_attributes=True)
 
 @router.post("/tables", tags=["tables"])
 async def create_table(
