@@ -220,7 +220,7 @@ class SqlAlchemyTablesService(AbstractTableService):
         stmt = (
             select(TableModel)
             .filter_by(id=table_id)
-            .options(selectinload(TableModel.fields))
+            .options(selectinload(TableModel.fields).selectinload(FieldModel.choices))
         )
         result = await self._db_session.execute(stmt)
         table_model: TableModel | None = result.scalar_one_or_none()
