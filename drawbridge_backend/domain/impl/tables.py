@@ -170,7 +170,6 @@ class SqlAlchemyTablesService(AbstractTableService):
 
         if filtering_params:
             stmt = _add_filtering_params_to_stmt(stmt, filtering_params)
-        stmt = stmt.order_by(stmt.selected_columns.c.id.desc())
 
         result = await self._storage_db_session.execute(stmt)
         rows = map_to_rows(table, cast(list[dict[str, Any]], result.mappings().all()))
@@ -352,6 +351,7 @@ class SqlAlchemyTablesService(AbstractTableService):
         stmt = update(TableModel).filter_by(id=table.table_id).values(is_delete=True)
         await self._db_session.execute(stmt)
         await self._db_session.flush()
+
 
         # sa_table = get_sa_table(table, self._metadata)
         # async with self._storage_engine.begin() as conn:
