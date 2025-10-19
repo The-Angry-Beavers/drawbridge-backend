@@ -11,7 +11,7 @@ from drawbridge_backend.domain.tables.entities import (
 
 
 class ChoiceSchema(BaseModel):
-    id: int = Field(alias="choice_id")
+    id: int = Field(alias="choice_id", validation_alias=AliasChoices("choice_id", "id"))
     value: str
 
 
