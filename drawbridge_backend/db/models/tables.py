@@ -1,22 +1,8 @@
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import Enum, ForeignKey, String, and_
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from drawbridge_backend.db.base import Base
 from drawbridge_backend.domain.enums import DataTypeEnum
-
-
-class NameSpaceModel(Base):
-    """Base class for all namespace models."""
-
-    __tablename__ = "namespaces"
-
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    name: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
-    description: Mapped[str | None]
-
-    tables: Mapped[list["TableModel"]] = relationship(
-        back_populates="namespace",
-    )
 
 
 class TableModel(Base):
@@ -39,6 +25,24 @@ class TableModel(Base):
     )
     namespace: Mapped["NameSpaceModel"] = relationship(back_populates="tables")
     is_delete: Mapped[bool] = mapped_column(nullable=False, server_default="false")
+
+
+class NameSpaceModel(Base):
+    """Base class for all namespace models."""
+
+    __tablename__ = "namespaces"
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    name: Mapped[str] = mapped_column(String(256), unique=True, nullable=False)
+    description: Mapped[str | None]
+
+    tables: Mapped[list["TableModel"]] = relationship(
+        "TableModel",
+        back_populates="namespace",
+        primaryjoin=and_(
+            id == TableModel.namespace_id, TableModel.is_delete.is_(False)
+        ),
+    )
 
 
 class FieldModel(Base):
