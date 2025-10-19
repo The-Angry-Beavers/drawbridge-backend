@@ -68,7 +68,6 @@ async def delete_table(table_id: int, table_service: TableServiceDep) -> None:
     await table_service.delete_table(table)
 
 
-
 @router.post("/tables/fetchRows", tags=["rows"])
 async def fetch_table_rows(
     req: FetchRowsRequestSchema,
@@ -146,6 +145,7 @@ async def update_table_row(
             UpdateRow(table, req_row.row_id, req_row.new_values)
             for req_row in req.updated_rows
         ]
+        print("received rows: ", rows)
         inserted_rows = await table_service.update_rows(rows)
     except Exception as e:
         errors.append(str(e))
