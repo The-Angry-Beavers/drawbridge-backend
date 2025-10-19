@@ -173,6 +173,9 @@ async def test_update_and_delete_rows(
     )
     assert updated[0].values[1].value.value == 20
 
+    updated = await service.fetch_rows(table)
+    assert updated[0].values[1].value.value == 20
+
     # Удаляем строку
     await service.delete_rows(table, [row_id])
     count = await service.count_rows(table)

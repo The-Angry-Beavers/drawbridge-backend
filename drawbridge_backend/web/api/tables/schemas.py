@@ -1,6 +1,6 @@
 import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, AliasChoices
 
 from drawbridge_backend.domain.enums import DataTypeEnum
 from drawbridge_backend.domain.tables.entities import (
@@ -16,7 +16,7 @@ class ChoiceSchema(BaseModel):
 
 
 class FieldSchema(BaseModel):
-    id: int = Field(alias="field_id")
+    id: int = Field(alias="field_id", validation_alias=AliasChoices("field_id", "id"))
     name: str
     verbose_name: str
     data_type: DataTypeEnum
@@ -55,7 +55,7 @@ class CreateFieldSchema(BaseModel):
 
 class TableSchema(BaseModel):
 
-    id: int = Field(alias="table_id")
+    id: int = Field(validation_alias=AliasChoices("id", "table_id"))
     name: str
     verbose_name: str
     description: str | None
