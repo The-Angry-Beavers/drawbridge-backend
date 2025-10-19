@@ -1,3 +1,4 @@
+from logging import getLogger
 from typing import Any, Final, Type, cast
 
 from sqlalchemy import (
@@ -99,6 +100,7 @@ def map_to_rows(table: Table, dict_rows: list[dict[str, Any]]) -> list[Row]:
     return rows
 
 
+logger = getLogger(__name__)
 T = TypeVar("T", bound=Any)
 
 
@@ -294,7 +296,7 @@ class SqlAlchemyTablesService(AbstractTableService):
                         f"Field with id={rd.field_id} not found in table '{table.name}'",
                     )
                 update_data[field.name] = rd.value.value
-
+            logger.info("updated_data: %s", update_data)
             stmt = (
                 sa_table.update()
                 .where(sa_table.c.id == r.row_id)
@@ -351,7 +353,6 @@ class SqlAlchemyTablesService(AbstractTableService):
         stmt = update(TableModel).filter_by(id=table.table_id).values(is_delete=True)
         await self._db_session.execute(stmt)
         await self._db_session.flush()
-
 
         # sa_table = get_sa_table(table, self._metadata)
         # async with self._storage_engine.begin() as conn:
