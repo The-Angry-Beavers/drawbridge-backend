@@ -61,7 +61,6 @@ class TableSchema(BaseModel):
     description: str | None
     namespace_id: int | None = None
     last_modified_at: datetime.datetime | None = None
-    is_delete: bool
 
     fields: list[FieldSchema]
 
